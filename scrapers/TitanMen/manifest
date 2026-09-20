@@ -1,0 +1,9 @@
+id: TitanMen
+name: TitanMen
+metadata: {}
+version: "77340626"
+date: "2025-10-28 01:33:48"
+requires: []
+source_repository: https://stashapp.github.io/CommunityScrapers/stable/index.yml
+files:
+- TitanMen.yml

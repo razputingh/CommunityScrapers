@@ -1,4 +1,22 @@
 name: TitanMen
+sceneByName:
+  action: script
+  script:
+    - python
+    - TitanMen.py
+    - scene-by-name
+sceneByFragment:
+  action: script
+  script:
+    - python
+    - TitanMen.py
+    - scene-by-fragment
+sceneByQueryFragment:
+  action: script
+  script:
+    - python
+    - TitanMen.py
+    - scene-by-query-fragment
 sceneByURL:
   - action: scrapeXPath
     url:
@@ -15,6 +33,8 @@ xPathScrapers:
       $details: //div[contains(@class, "scene-page-detail")]
     scene:
       Title: //h1[@class="scene-header-title"]
+      URLs:
+        fixed: "{inputURL}"
       Details:
         selector: //div[@class="col span_6_of_12"][1]/p/text()
         concat: "\n\n"
@@ -24,6 +44,7 @@ xPathScrapers:
         selector: $details//strong[starts-with(text(), "Released")]/following-sibling::text()
         postProcess:
           - parseDate: Jan 2, 2006
+      Duration: $details//strong[starts-with(text(), "Length")]/following-sibling::text()
       Studio:
         Name:
           selector: $details//strong[starts-with(text(), "Movie Title")]/following-sibling::a/@href
@@ -44,20 +65,16 @@ xPathScrapers:
                   with: https://www.titanmen.com/
       Groups:
         Name: $details//strong[starts-with(text(), "Movie")]/following-sibling::a
-        URL:
+        URLs:
           selector: $details//strong[starts-with(text(), "Movie")]/following-sibling::a/@href
           postProcess:
             - replace:
-                - regex: ^
-                  with: https://www.titanmen.com/
+                - regex: ^/?(dvds\.php.*)$
+                  with: https://www.titanmen.com/$1
       Tags:
         Name: $details//strong[starts-with(text(), "Categories")]/following-sibling::a
       Image:
-        selector: //script[contains(text(), concat("scene-image-", //div[@class="rating_box"]/@data-id))]/text()
-        postProcess:
-          - replace:
-              - regex: .*image:\s*"([^"]+).*
-                with: $1
+        selector: //div[@id=concat("scene-grid-item-", //div[@class="rating_box"]/@data-id)]//img[contains(concat(" ", normalize-space(@class), " "), " scene-grid-image ")]/@src
   movieScraper:
     group:
       Name:
@@ -73,4 +90,4 @@ xPathScrapers:
         Name: //div[contains(@class, "movie-page-detail")]//strong[starts-with(text(), "Studio")]/following-sibling::a
       Director: //div[contains(@class, "movie-page-detail")]//strong[starts-with(text(), "Director")]/following-sibling::a
       FrontImage: //div[contains(@class, "box-cover")]//img/@src
-# Last Updated September 17, 2025
+# Last Updated September 19, 2026

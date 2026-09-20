@@ -186,8 +186,8 @@ def performer_from_url(url: str) -> ScrapedPerformer | None:
         performer["death_date"] = f"{death_year[-4:]}"
 
     if (bio := soup.find("div", string="Notes:")) and (bio := bio.find_next("div")):
-    	if bio.get_text(separator="\n") != "none available":
-        	performer["details"] = bio.get_text(separator="\n")
+        if bio.get_text(separator="\n") != "none available":
+            performer["details"] = bio.get_text(separator="\n")
 
     if aliases := soup.find_all("h2"):
         if config.disambiguate_aliases:
@@ -278,10 +278,44 @@ def movie_from_url(url: str) -> ScrapedMovie | None:
     return movie
 
 
+# Movies have no `performers` field of their own (see py_common.types.ScrapedGroup),
+# so cast is scraped as a ScrapedScene on the same URL instead, via sceneByURL.
+# The performer links also appear (duplicated) in the per-scene breakdown and
+# review blurbs elsewhere on the page, so this scopes narrowly to the "Cast
+# Credits" table specifically rather than the whole page.
+def movie_cast_from_url(url: str) -> ScrapedScene | None:
+    res = scraper.get(url)
+    soup = BeautifulSoup(res.text, "html.parser")
+    heading = soup.find("div", string="Cast Credits")
+    cast_list = heading.find_next_sibling("div") if heading else None
+    if not cast_list:
+        log.error(f"Cannot find Cast Credits section in {url}")
+        return None
+
+    performers: list[ScrapedPerformer] = []
+    for link in cast_list.find_all("a", href=lambda x: x and "performer" in x):
+        row = link.find_parent("div", class_="flex")
+        marker = row.find("div", class_="w-4") if row else None
+        if marker and marker.get_text(strip=True) == "N":
+            continue  # non-sexual (host/narrator) role, not a cast member
+        performer = name_with_url(link)
+        performers.append(
+            {"name": performer["name"], "urls": [performer["url"]], "gender": "MALE"}
+        )  # type: ignore
+
+    if not performers:
+        return None
+
+    return {"performers": performers, "url": url}
+
+
 if __name__ == "__main__":
     op, args = scraper_args()
     result = None
     match op, args:
+        case "scene-by-url", {"url": url} if url and "/video/" in url:
+            # Movies registered under sceneByURL too, cast-only (see movie_cast_from_url)
+            result = movie_cast_from_url(url)
         case "scene-by-url", {"url": url} if url:
             result = scene_from_url(url)
         case "scene-by-fragment", args:

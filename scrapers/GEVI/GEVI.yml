@@ -30,6 +30,13 @@ sceneByURL:
       - python3
       - GEVI.py
       - scene-by-url
+  - url:
+      - gayeroticvideoindex.com/video
+    action: script
+    script:
+      - python3
+      - GEVI.py
+      - scene-by-url
 sceneByFragment:
   action: script
   script:
@@ -44,4 +51,4 @@ groupByURL:
       - python3
       - GEVI.py
       - movie-by-url
-# Last Updated February 08, 2024
+# Last Updated September 19, 2026

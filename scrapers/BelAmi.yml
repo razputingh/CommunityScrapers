@@ -4,19 +4,40 @@ sceneByURL:
     url:
       - belamionline.com
     scraper: sceneScraper
-    
+
+sceneByName:
+  action: scrapeXPath
+  queryURL: https://newtour.belamionline.com/search.aspx?q={}
+  scraper: sceneSearch
+
+sceneByQueryFragment:
+  action: scrapeXPath
+  queryURL: "{url}"
+  scraper: sceneScraper
+
 performerByURL:
   - action: scrapeXPath
     url:
       - belamionline.com
     scraper: performerScraper
 
+performerByName:
+  action: scrapeXPath
+  queryURL: https://newtour.belamionline.com/search.aspx?q={}
+  scraper: performerSearch
+
+groupByURL:
+  - action: scrapeXPath
+    url:
+      - newtour.belamionline.com/movie_detail.aspx
+    scraper: movieScraper
+
 xPathScrapers:
   sceneScraper:
     scene:
       Title: //*[@id="ContentPlaceHolder1_LabelTitle"]
       Details:
-        selector: //p[span[@id="ContentPlaceHolder1_LabelDescription"]]/following-sibling::p
+        selector: //*[@id="ContentPlaceHolder1_LabelDescription"] | //p[span[@id="ContentPlaceHolder1_LabelDescription"]]/following-sibling::p
         concat: "\n\n"
       Date:
         selector: //*[@id="ContentPlaceHolder1_LabelReleased"]
@@ -25,16 +46,15 @@ xPathScrapers:
       Studio:
         Name:
           fixed: BelAmi
+        URL:
+          fixed: https://belamionline.com
       Performers:
-        Name:
-          selector: //div[@class="actors_list"]//text()[not(contains(.,"Show more actors"))]
-      Image:
-          selector: //meta[@property="og:image"]/@content
+        Name: //div[@class="actors_list"]//h3
       Tags:
         Name:
           selector: //*[@id="ContentPlaceHolder1_LabelTags"]/a
           postProcess:
-            - map:
+            - map: &tagMap
                 Castings: "Casting"
                 Condom Free: "No Condom"
                 Condom Free Archive: "No Condom"
@@ -46,29 +66,80 @@ xPathScrapers:
                 Solos: "Solo Male"
                 Sex Scenes: "Gay"
                 Three Way: "Threesome (Gay)"
+      Image:
+        selector: //meta[@property="og:image"]/@content
+      URLs: //link[@rel="canonical"]/@href
       Code:
         selector: //form[@method="post"]/@action
         postProcess:
           - replace:
               - regex: ^.*\=\s*
                 with:
+
+  sceneSearch:
+    common:
+      $card: //h2[starts-with(text(),"Sex scenes") or starts-with(text(),"Solos") or starts-with(text(),"Backstage")]/following-sibling::div[1]//div[@class="content"]
+    scene:
+      Title: $card//span[@class="label"]
+      URLs:
+        selector: $card//div[@class="img"]/a/@href
+        postProcess:
+          - replace:
+              - regex: ^
+                with: https://newtour.belamionline.com/
+      Details: $card//div[@class="img"]//*[self::video or self::img]/@alt
+      Date:
+        selector: $card//div[@class="date"]
+        postProcess:
+          - parseDate: 1/2/2006
+      Image:
+        selector: $card//div[@class="img"]//*[self::video or self::img]/@*[name()="poster" or name()="data-src"]
+
   performerScraper:
     performer:
       Name: //div[@class="head top_head"]//h1/text()
       Gender:
         fixed: Male
       HairColor:
-        selector: //td[contains(text(),"Hair color:")]/following-sibling::td/text()
+        selector: //td[contains(.,"Hair color:")]/following-sibling::td/text()
       EyeColor:
-        selector: //td[contains(text(),"Eye color:")]/following-sibling::td/text()
+        selector: //td[contains(.,"Eye color:")]/following-sibling::td/text()
       Weight:
-        selector: //td[contains(text(),"Weight:")]/following-sibling::td/text()
+        selector: //td[contains(.,"Weight:")]/following-sibling::td/text()
       Height:
-        selector: //td[contains(text(),"Height:")]/following-sibling::td/text()
+        selector: //td[contains(.,"Height:")]/following-sibling::td/text()
       PenisLength:
-        selector: //td[contains(text(),"Dick size:")]/following-sibling::td/text()
-      Details:  
-        selector: //div[@class="model_des"]/p
+        selector: //td[contains(.,"Dick size:")]/following-sibling::td/text()
+      Details:
+        selector: //div[@class="model_des"]/text()
       Image: //div[@class="main_card"]/div[@class="left"]/div[@class="img"]/img/@src
-      
-# Last Updated September 6, 2026
+      URLs: //link[@rel="canonical"]/@href
+
+  performerSearch:
+    common:
+      $card: //h2[starts-with(text(),"Models")]/following-sibling::div[1]//div[@class="content"]
+    performer:
+      Name: $card//span[@class="label"]
+      URLs:
+        selector: $card//div[@class="img"]/a/@href
+        postProcess:
+          - replace:
+              - regex: ^
+                with: https://newtour.belamionline.com/
+      Images:
+        selector: $card//div[@class="img"]//img/@data-src
+
+  movieScraper:
+    group:
+      Name: //div[@class="movie_h"]/h1
+      Synopsis: //div[@class="movie_h"]/p
+      Tags:
+        Name:
+          selector: //div[@class="tags_wrap"]//a
+          postProcess:
+            - map: *tagMap
+      FrontImage: //div[@class="movie_poster"]/img[1]/@src
+      BackImage: //div[@class="movie_poster"]/img[@class="poster_back"]/@src
+      URLs: //link[@rel="canonical"]/@href
+
+# Last Updated September 19, 2026
