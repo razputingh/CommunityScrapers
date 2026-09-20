@@ -273,7 +273,20 @@ def movie_from_url(url: str) -> ScrapedMovie | None:
     if directors := movie_section.find_all("a", href=lambda x: "director" in x):
         movie["director"] = ", ".join(d.get_text(strip=True) for d in directors)
 
-    movie["url"] = url
+    movie["urls"] = [url]
+
+    # "Buy or view this production at ___" links out to wherever GEVI has an
+    # affiliate/vendor deal for this title (e.g. GayDVDEmpire, AEBN) -- not
+    # every movie has one, and a title can have a separate block per vendor
+    # (find_all, not find -- a two-vendor title only surfaced one link
+    # before this was caught in manual testing).
+    for buy_text in movie_section.find_all(
+        string=lambda text: text and "Buy or view this production" in text
+    ):
+        if buy_div := buy_text.find_parent("div"):
+            movie["urls"].extend(
+                abs_url(a["href"]) for a in buy_div.find_all("a", href=True)
+            )
 
     return movie
 
