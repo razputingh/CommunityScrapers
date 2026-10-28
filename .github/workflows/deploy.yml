@@ -23,26 +23,21 @@ jobs:
         path: develop
         ref: master
         fetch-depth: 0
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version-file: develop/.dvmrc
+        cache: true
     - name: Build develop
       run: |
         cd develop
-        ./build_site.sh ../_site/develop
+        deno task build ../_site/develop
     - name: copy develop to stable
       run: |
         cp -r _site/develop _site/stable
-    - uses: pnpm/action-setup@v4
-      with:
-        package_json_file: develop/site_generator/package.json
-    - uses: actions/setup-node@v6
-      with:
-        node-version: latest
     - name: Generate html index page
       run: |
-        cd develop/site_generator
-        npm i -g ts-node
-        pnpm install --frozen-lockfile
-        npm run ci-build
-        cp -r site/* ../../_site/
+        cd develop
+        deno task site ../_site
     - uses: actions/upload-pages-artifact@v4
       with:
         path: '_site'

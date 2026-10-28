@@ -1,0 +1,90 @@
+# Search half of the IWantClips package. sceneScraper is duplicated from
+# IWantClips-NoCDP.yml because sceneByQueryFragment needs it when a search
+# result is picked; URL scraping itself is left to the NoCDP file, since
+# driver.useCDP is file-wide and a browser is expensive for that.
+name: IWantClips (Search via CDP)
+performerByName:
+  action: scrapeXPath
+  queryURL: https://iwantclips.com/artists?query={}
+  scraper: performerSearch
+sceneByName:
+  action: scrapeXPath
+  queryURL: https://iwantclips.com/search/advsearch?query={}
+  scraper: sceneSearch
+sceneByQueryFragment:
+  action: scrapeXPath
+  queryURL: "{url}"
+  scraper: sceneScraper
+xPathScrapers:
+  sceneSearch:
+    common:
+      # Each result has separate desktop/mobile title markup. Anchor the fields
+      # to the single mobile thumbnail so each clip produces exactly one scene.
+      $clip: //li[contains(concat(' ', normalize-space(@class), ' '), ' ais-Hits-item ')]/div[contains(concat(' ', normalize-space(@class), ' '), ' clip ')]
+    scene:
+      Title: $clip//div[contains(concat(' ', normalize-space(@class), ' '), ' clip-thumb-16-9 ') and contains(concat(' ', normalize-space(@class), ' '), ' visible-xs ')]/a/img/@alt
+      URLs: $clip//div[contains(concat(' ', normalize-space(@class), ' '), ' clip-thumb-16-9 ') and contains(concat(' ', normalize-space(@class), ' '), ' visible-xs ')]/a/@href
+      Image: $clip//div[contains(concat(' ', normalize-space(@class), ' '), ' clip-thumb-16-9 ') and contains(concat(' ', normalize-space(@class), ' '), ' visible-xs ')]/a/img/@data-original
+      Details: $clip//div[contains(concat(' ', normalize-space(@class), ' '), ' content-extended ')]//div[contains(concat(' ', normalize-space(@class), ' '), ' content-description ')]/p
+      Studio:
+        Name: $clip//div[contains(concat(' ', normalize-space(@class), ' '), ' content-footer ') and contains(concat(' ', normalize-space(@class), ' '), ' visible-xs ')]//div[contains(concat(' ', normalize-space(@class), ' '), ' content-price ')]/a[1]/@title
+      Tags:
+        Name:
+          selector: $clip//div[contains(concat(' ', normalize-space(@class), ' '), ' content-extended ')]//div[contains(concat(' ', normalize-space(@class), ' '), ' content-categories ')]/span[contains(concat(' ', normalize-space(@class), ' '), ' subtitle-2 ')]/text()
+          split: ", "
+  sceneScraper:
+    common:
+      $model: //a[@class="modelLink"]
+    scene:
+      Title: //h1[@class='no-style']
+      URLs: //link[@rel="canonical"]/@href
+      Date:
+        selector: //div[@class="col-xs-12 date fix"]/span/em
+        postProcess:
+          - replace:
+              - regex: Published\s(.+)
+                with: $1
+          - parseDate: Jan 2, 2006
+      Details:
+        selector: //div[@class="col-xs-12 description fix"][last()]/span
+        concat: "\n\n"
+      Tags:
+        Name:
+          selector: //div[@class="col-xs-12 hashtags hashtags-grey fix"]/span/em | //div[@class="col-xs-12 category fix"]/a
+          concat: ","
+          postProcess:
+            - replace:
+                - regex: "Keywords:"
+                  with: ""
+                - regex: ',\s+'
+                  with: ","
+          split: ","
+      Image:
+        selector: //meta[@name='og:image']/@content
+        postProcess:
+          - replace:
+              - regex: (\d*_.*((\.gif)|(\.mp4)))
+                with: t_$1
+          - replace:
+              - regex: '(\.gif)|(\.mp4)'
+                with: ".jpg"
+      Studio:
+        Name: $model
+      Performers:
+        Name: $model
+  performerSearch:
+    common:
+      $artist: //li[@class="ais-Hits-item grid-artist-item"]
+    performer:
+      Name: $artist//h5[contains(@class,"featured-store-name")]/text()
+      Image: $artist//div[@class="roundPic m-b-sm"]/img/@src
+      URLs: $artist//div[@class="featured-store-avatar"]/a/@href
+
+driver:
+  useCDP: true
+  cookies:
+    - Cookies:
+        - Name: iwc-new-design
+          Value: "on"
+          Domain: .iwantclips.com
+          Path: /

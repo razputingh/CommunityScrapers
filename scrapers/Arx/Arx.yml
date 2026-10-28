@@ -26,14 +26,15 @@ performerByURL:
 xPathScrapers:
   htmlScraper:
     scene:
-      Title: &titleSel //meta[@property="og:title"]/@content
+      # meta og:title is sometimes different to the actual title
+      Title: //img[@class="vds-poster" or @class="media-poster-image"]/@alt
       Date: &date
         selector: //h1/following-sibling::div[contains(@class, "items-center")]//span[@class="block"]
         postProcess:
           - parseDate: Jan 2, 2006
       Details: &detailsSel //span[text()="Description:"]/following-sibling::span
       Performers:
-        Name: &performersSel //span[text()="Models:"]/following-sibling::div//a//span
+        Name: &performersSel //span[text()="Models:"]/following-sibling::div//a
       Tags:
         Name: &tagsSel //a[contains(@href, "/categories/")]
       URLs: &urlSel //meta[@property="og:url"]/@content
@@ -59,10 +60,11 @@ xPathScrapers:
                   with: https://$1
     gallery:
       Title:
-        selector: *titleSel
+        # meta og:title is sometimes different to "Photos from <the actual title>"
+        selector: //div[contains(@class, "grid")]//img/@alt
         postProcess:
           - replace:
-              - regex: "^Photos from "
+              - regex: "- Photo \\d+"
                 with: ""
       Code: *code
       URLs: *urlSel

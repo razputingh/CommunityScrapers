@@ -1,3 +1,4 @@
+# requires: py_common
 name: Pornhub
 performerByURL:
   - action: scrapeXPath
@@ -13,6 +14,16 @@ sceneByURL:
       - pornhub.com/view_video.php?viewkey=
       - pornhub.org/view_video.php?viewkey=
     scraper: sceneScraper
+  - action: scrapeXPath
+    url:
+      - pornhub.com/shorties/
+      - pornhub.org/shorties/
+    queryURL: "{url}"
+    queryURLReplace:
+      url:
+        - regex: .*/shorties/([a-zA-Z\d]+).*
+          with: https://www.pornhub.com/view_video.php?viewkey=$1
+    scraper: sceneScraper
 sceneByFragment:
   action: scrapeXPath
   queryURL: https://www.pornhub.com/view_video.php?viewkey={filename}
@@ -25,9 +36,11 @@ sceneByFragment:
   scraper: sceneScraper
 
 sceneByName:
-  action: scrapeXPath
-  queryURL: https://www.pornhub.com/video/search?search={}
-  scraper: sceneSearch
+  action: script
+  script:
+    - python3
+    - Pornhub.py
+    - scene-by-name
 sceneByQueryFragment:
   action: scrapeXPath
   queryURL: "{url}"
@@ -37,26 +50,10 @@ performerByName:
   action: script
   script:
     - python3
-    - PornhubStar.py
+    - Pornhub.py
     - performer-by-name
 
 xPathScrapers:
-  sceneSearch:
-    common:
-      $searchItem: //ul[contains(@class, "search-video-thumbs") and not(@id="bottomVideos")]
-      $searchThumb: //ul[contains(@class, "search-video-thumbs") and not(@id="bottomVideos")]//div[contains(@class, "thumbnail-info-wrapper")]
-
-    scene:
-      Title: $searchThumb//span[@class="title"]/a
-      URLs:
-        selector: $searchThumb//span[@class="title"]/a/@href
-        postProcess:
-          - replace:
-              - regex: ^
-                with: "https://www.pornhub.com"
-      Image: $searchItem//div[contains(@class, "phimage")]//img/@data-mediumthumb
-      Studio:
-        Name: $searchThumb//div[contains(@class, "usernameWrap")]/a[matches(@href, "/(channels|model|pornstar)/")]
   performerScraper:
     common:
       $infoPiece: //div[@class="infoPiece"]
@@ -164,7 +161,7 @@ xPathScrapers:
         selector: //meta[@property="og:url"]/@content
         postProcess:
           - replace:
-              - regex: '.+?(\=)'
+              - regex: .*[=/]
                 with:
       Tags:
         Name: $videoDetails//a[@data-label="category"] | $videoDetails//a[@data-label="tag"]

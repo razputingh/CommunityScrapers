@@ -1,4 +1,4 @@
-# All series fetched from the API on 2026-07-19
+# All series fetched from the API on 2026-10-03
 # https://api.faknetworks.com/v1/series?lang=<en|es|pt>&page=1&take=1000
 
 from py_common.util import dig
@@ -6,13 +6,15 @@ from py_common.util import dig
 
 def to_scraped_studio(api_object: dict, product: str, lang: str = "en") -> dict:
     slug = api_object["slug"]
-    unknown = {"name": api_object.get("title", "Unknown"), "parent": {"name": "Unknown"}}
+    # A series newer than this table: its name is known, its network isn't
+    unknown = {"name": api_object["title"]}
 
     series_id = dig(slug_index, product, slug)
     if series_id is None:
         return unknown
 
-    return dig(studio_map, series_id, lang, default=unknown)
+    studio = dig(studio_map, series_id, lang, default=unknown)
+    return {key: value for key, value in studio.items() if value}
 
 
 slug_index = {
@@ -235,6 +237,20 @@ slug_index = {
         "couples": 245,
         "parejas": 245,
         "casais": 245,
+    },
+    "roccovids": {
+        "orgies-and-gangbangs": 247,
+        "orgias-y-gangbangs": 247,
+        "orgias-e-gangbangs": 247,
+        "rocco-lesbians": 248,
+        "rocco-lesbicos": 248,
+        "rocco-anal": 249,
+        "rocco-vip": 250,
+        "bbc-big-black-cock": 251,
+        "bbc-grande-galo-preto": 251,
+        "bts-behind-the-camera": 252,
+        "bts-detras-de-camara": 252,
+        "bts-atras-da-camera": 252,
     },
 }
 
@@ -648,7 +664,7 @@ studio_map = {
     },
     119: {
         "en": {
-            "name": "I sell my girlfriend.",
+            "name": "I sell my girlfriend",
             "aliases": "Vendo a mi Novia, Vendo minha namorada",
             "url": "https://www.fakings.com/en/serie/i-sell-my-girlfriend",
             "parent": {
@@ -658,7 +674,7 @@ studio_map = {
         },
         "es": {
             "name": "Vendo a mi Novia",
-            "aliases": "I sell my girlfriend., Vendo minha namorada",
+            "aliases": "I sell my girlfriend, Vendo minha namorada",
             "url": "https://www.fakings.com/es/serie/vendo-a-mi-novia",
             "parent": {
                 "name": "FAKings",
@@ -667,7 +683,7 @@ studio_map = {
         },
         "pt": {
             "name": "Vendo minha namorada",
-            "aliases": "I sell my girlfriend., Vendo a mi Novia",
+            "aliases": "I sell my girlfriend, Vendo a mi Novia",
             "url": "https://www.fakings.com/pt/serie/vendo-minha-namorada",
             "parent": {
                 "name": "FAKings",
@@ -735,8 +751,8 @@ studio_map = {
     },
     132: {
         "en": {
-            "name": "I TORNEO: 2016",
-            "aliases": "",
+            "name": "1ST TOURNAMENT: 2016",
+            "aliases": "I TORNEO: 2016",
             "url": "https://www.madlifes.com/en/serie/i-edicion-20152016",
             "parent": {
                 "name": "MadLifes",
@@ -764,8 +780,8 @@ studio_map = {
     },
     135: {
         "en": {
-            "name": "II TORNEO: 2017",
-            "aliases": "",
+            "name": "2ND TOURNAMENT: 2017",
+            "aliases": "II TORNEO: 2017",
             "url": "https://www.madlifes.com/en/serie/ii-torneo-2017",
             "parent": {
                 "name": "MadLifes",
@@ -793,8 +809,8 @@ studio_map = {
     },
     136: {
         "en": {
-            "name": "Nuestra Primera Porno",
-            "aliases": "",
+            "name": "Our First Porn",
+            "aliases": "Nuestra Primera Porno",
             "url": "https://www.pepeporn.com/en/serie/nuestra-primera-porno",
             "parent": {
                 "name": "PepePorn",
@@ -822,8 +838,8 @@ studio_map = {
     },
     137: {
         "en": {
-            "name": "¿Valgo para el Porno?",
-            "aliases": "",
+            "name": "Am I good for porn?",
+            "aliases": "¿Valgo para el Porno?",
             "url": "https://www.pepeporn.com/en/serie/valgo-para-el-porno",
             "parent": {
                 "name": "PepePorn",
@@ -851,8 +867,8 @@ studio_map = {
     },
     138: {
         "en": {
-            "name": "Fantasias Cumplidas",
-            "aliases": "",
+            "name": "Fulfilled Fantasies",
+            "aliases": "Fantasias Cumplidas",
             "url": "https://www.pepeporn.com/en/serie/fantasias-cumplidas",
             "parent": {
                 "name": "PepePorn",
@@ -938,8 +954,8 @@ studio_map = {
     },
     151: {
         "en": {
-            "name": "18 añitos",
-            "aliases": "",
+            "name": "18 years old",
+            "aliases": "18 añitos",
             "url": "https://www.pepeporn.com/en/serie/18-anitos",
             "parent": {
                 "name": "PepePorn",
@@ -967,8 +983,8 @@ studio_map = {
     },
     152: {
         "en": {
-            "name": "Pareja de celosos",
-            "aliases": "",
+            "name": "Jealous couple",
+            "aliases": "Pareja de celosos",
             "url": "https://www.pepeporn.com/en/serie/pareja-de-celosos",
             "parent": {
                 "name": "PepePorn",
@@ -996,8 +1012,8 @@ studio_map = {
     },
     153: {
         "en": {
-            "name": "Maduritos y Maduritas",
-            "aliases": "",
+            "name": "Maduritos and Maduritas",
+            "aliases": "Maduritos y Maduritas",
             "url": "https://www.pepeporn.com/en/serie/maduritos-y-maduritas",
             "parent": {
                 "name": "PepePorn",
@@ -1228,8 +1244,8 @@ studio_map = {
     },
     171: {
         "en": {
-            "name": "II Fiesta Madlifes",
-            "aliases": "",
+            "name": "II Madlifes Party",
+            "aliases": "II Fiesta Madlifes",
             "url": "https://www.madlifes.com/en/serie/ii-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1257,8 +1273,8 @@ studio_map = {
     },
     172: {
         "en": {
-            "name": "III Fiesta MadLifes",
-            "aliases": "",
+            "name": "III MadLifes Party",
+            "aliases": "III Fiesta MadLifes",
             "url": "https://www.madlifes.com/en/serie/iii-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1286,8 +1302,8 @@ studio_map = {
     },
     173: {
         "en": {
-            "name": "IV Fiesta MadLifes",
-            "aliases": "",
+            "name": "IV MadLifes Party",
+            "aliases": "IV Fiesta MadLifes",
             "url": "https://www.madlifes.com/en/serie/iv-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1315,8 +1331,8 @@ studio_map = {
     },
     174: {
         "en": {
-            "name": "V Fiesta MadLifes",
-            "aliases": "",
+            "name": "V MadLifes Party",
+            "aliases": "V Fiesta MadLifes",
             "url": "https://www.madlifes.com/en/serie/v-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1344,8 +1360,8 @@ studio_map = {
     },
     175: {
         "en": {
-            "name": "VI Fiesta MadLifes",
-            "aliases": "",
+            "name": "VI MadLifes Party",
+            "aliases": "VI Fiesta MadLifes",
             "url": "https://www.madlifes.com/en/serie/vi-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1373,8 +1389,8 @@ studio_map = {
     },
     176: {
         "en": {
-            "name": "VII Fiesta MadLifes",
-            "aliases": "",
+            "name": "VII MadLifes Party",
+            "aliases": "VII Fiesta MadLifes",
             "url": "https://www.madlifes.com/en/serie/vii-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1460,8 +1476,8 @@ studio_map = {
     },
     179: {
         "en": {
-            "name": "VIII Fiesta MadLifes",
-            "aliases": "",
+            "name": "VIII MadLifes Party",
+            "aliases": "VIII Fiesta MadLifes",
             "url": "https://www.madlifes.com/en/serie/viii-fiesta-madlifes",
             "parent": {
                 "name": "MadLifes",
@@ -1518,8 +1534,8 @@ studio_map = {
     },
     182: {
         "en": {
-            "name": "Fiestas MadLifes - 2018",
-            "aliases": "",
+            "name": "MadLifes Festivities - 2018",
+            "aliases": "Fiestas MadLifes - 2018",
             "url": "https://www.madlifes.com/en/serie/fiestas-madlifes-2018",
             "parent": {
                 "name": "MadLifes",
@@ -1721,8 +1737,8 @@ studio_map = {
     },
     189: {
         "en": {
-            "name": "Fiestas MadLifes - 2019",
-            "aliases": "",
+            "name": "MadLifes Festivities - 2019",
+            "aliases": "Fiestas MadLifes - 2019",
             "url": "https://www.madlifes.com/en/serie/fiestas-madlifes-2019",
             "parent": {
                 "name": "MadLifes",
@@ -2098,8 +2114,8 @@ studio_map = {
     },
     203: {
         "en": {
-            "name": "Grabado en casa",
-            "aliases": "",
+            "name": "Recorded at home",
+            "aliases": "Grabado en casa",
             "url": "https://www.pepeporn.com/en/serie/porno-en-casa",
             "parent": {
                 "name": "PepePorn",
@@ -2127,8 +2143,8 @@ studio_map = {
     },
     205: {
         "en": {
-            "name": "Follate a mi pareja",
-            "aliases": "",
+            "name": "Fuck my partner",
+            "aliases": "Follate a mi pareja",
             "url": "https://www.pepeporn.com/en/serie/follate-a-mi-pareja",
             "parent": {
                 "name": "PepePorn",
@@ -2156,8 +2172,8 @@ studio_map = {
     },
     206: {
         "en": {
-            "name": "Quiero ser Cornudo",
-            "aliases": "",
+            "name": "I Want to Be a Cuckold",
+            "aliases": "Quiero ser Cornudo",
             "url": "https://www.pepeporn.com/en/serie/quiero-ser-cornudo",
             "parent": {
                 "name": "PepePorn",
@@ -2533,8 +2549,8 @@ studio_map = {
     },
     220: {
         "en": {
-            "name": "El Diario de Apolonia Lapiedra",
-            "aliases": "",
+            "name": "The Diary of Apolonia Lapiedra",
+            "aliases": "El Diario de Apolonia Lapiedra",
             "url": "https://www.pornermates.com/en/serie/el-diario-de-apolonia-lapiedra",
             "parent": {
                 "name": "PornerMates",
@@ -2562,8 +2578,8 @@ studio_map = {
     },
     221: {
         "en": {
-            "name": "Nacho Vidal: Empotrador",
-            "aliases": "",
+            "name": "Nacho Vidal: Embedder",
+            "aliases": "Nacho Vidal: Empotrador",
             "url": "https://www.pornermates.com/en/serie/nacho-vidal-empotrador",
             "parent": {
                 "name": "PornerMates",
@@ -2591,8 +2607,8 @@ studio_map = {
     },
     222: {
         "en": {
-            "name": "Mas de 2 NO son multitud",
-            "aliases": "",
+            "name": "More than 2 are NOT crowds",
+            "aliases": "Mas de 2 NO son multitud",
             "url": "https://www.pornermates.com/en/serie/mas-de-2-no-son-multitud",
             "parent": {
                 "name": "PornerMates",
@@ -2620,8 +2636,8 @@ studio_map = {
     },
     223: {
         "en": {
-            "name": "Ellas se lo montan... tu solo miras",
-            "aliases": "",
+            "name": "They set it up... you just watch",
+            "aliases": "Ellas se lo montan... tu solo miras",
             "url": "https://www.pornermates.com/en/serie/ellas-se-lo-montan-tu-solo-miras",
             "parent": {
                 "name": "PornerMates",
@@ -2649,8 +2665,8 @@ studio_map = {
     },
     224: {
         "en": {
-            "name": "Tengo una amiga que quiere ser PornStar",
-            "aliases": "",
+            "name": "I have a friend who wants to be a Pornstar",
+            "aliases": "Tengo una amiga que quiere ser PornStar",
             "url": "https://www.pornermates.com/en/serie/tengo-una-amiga-que-quiere-ser-pornstar",
             "parent": {
                 "name": "PornerMates",
@@ -2707,8 +2723,8 @@ studio_map = {
     },
     226: {
         "en": {
-            "name": "DIVAS... Tenían que estar aquí",
-            "aliases": "",
+            "name": "DIVAS... They had to be here",
+            "aliases": "DIVAS... Tenían que estar aquí",
             "url": "https://www.pornermates.com/en/serie/divas-tenian-que-estar-aqui",
             "parent": {
                 "name": "PornerMates",
@@ -2736,8 +2752,8 @@ studio_map = {
     },
     227: {
         "en": {
-            "name": "Estamos In Love",
-            "aliases": "",
+            "name": "We Are In Love",
+            "aliases": "Estamos In Love",
             "url": "https://www.pornermates.com/en/serie/estamos-in-love",
             "parent": {
                 "name": "PornerMates",
@@ -2765,8 +2781,8 @@ studio_map = {
     },
     228: {
         "en": {
-            "name": "Porno solidario",
-            "aliases": "",
+            "name": "Solidarity porn",
+            "aliases": "Porno solidario",
             "url": "https://www.nigged.com/en/serie/porno-solidario",
             "parent": {
                 "name": "Nigged",
@@ -3254,6 +3270,103 @@ studio_map = {
                 "name": "MorenoLust",
                 "url": "https://www.morenolust.com",
             },
+        },
+    },
+    # Rocco Vids has no site of its own: its scenes are listed on the other network sites
+    247: {
+        "en": {
+            "name": "Orgies and GangBangs",
+            "aliases": "Orgías y GangBangs, Orgias e GangBangs",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "es": {
+            "name": "Orgías y GangBangs",
+            "aliases": "Orgies and GangBangs, Orgias e GangBangs",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "pt": {
+            "name": "Orgias e GangBangs",
+            "aliases": "Orgies and GangBangs, Orgías y GangBangs",
+            "parent": {"name": "Rocco Vids"},
+        },
+    },
+    248: {
+        "en": {
+            "name": "Rocco Lesbians",
+            "aliases": "Rocco Lésbicos",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "es": {
+            "name": "Rocco Lésbicos",
+            "aliases": "Rocco Lesbians",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "pt": {
+            "name": "Rocco Lésbicos",
+            "aliases": "Rocco Lesbians",
+            "parent": {"name": "Rocco Vids"},
+        },
+    },
+    249: {
+        "en": {
+            "name": "Rocco Anal",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "es": {
+            "name": "Rocco Anal",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "pt": {
+            "name": "Rocco Anal",
+            "parent": {"name": "Rocco Vids"},
+        },
+    },
+    250: {
+        "en": {
+            "name": "Rocco Vip",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "es": {
+            "name": "Rocco Vip",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "pt": {
+            "name": "Rocco Vip",
+            "parent": {"name": "Rocco Vids"},
+        },
+    },
+    251: {
+        "en": {
+            "name": "BBC - Big Black Cock",
+            "aliases": "BBC - Grande Galo Preto",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "es": {
+            "name": "BBC - Big Black Cock",
+            "aliases": "BBC - Grande Galo Preto",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "pt": {
+            "name": "BBC - Grande Galo Preto",
+            "aliases": "BBC - Big Black Cock",
+            "parent": {"name": "Rocco Vids"},
+        },
+    },
+    252: {
+        "en": {
+            "name": "BTS - Behind the camera",
+            "aliases": "BTS - Detrás de cámara, BTS - Atrás da câmera",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "es": {
+            "name": "BTS - Detrás de cámara",
+            "aliases": "BTS - Behind the camera, BTS - Atrás da câmera",
+            "parent": {"name": "Rocco Vids"},
+        },
+        "pt": {
+            "name": "BTS - Atrás da câmera",
+            "aliases": "BTS - Behind the camera, BTS - Detrás de cámara",
+            "parent": {"name": "Rocco Vids"},
         },
     },
 }

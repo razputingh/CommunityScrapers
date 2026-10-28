@@ -1,7 +1,7 @@
 import html
 import json
 import re
-from datetime import datetime
+import time
 from pathlib import Path
 from typing import TypedDict
 from urllib.parse import quote
@@ -16,7 +16,7 @@ from py_common.types import (
     ScrapedStudio,
     ScrapedTag,
 )
-from py_common.util import dig, scraper_args
+from py_common.util import dig, is_own_url, scraper_args
 
 ensure_requirements("requests", "bs4:beautifulsoup4")
 
@@ -60,7 +60,7 @@ def parse_date(date_str: str | None) -> str:
     if not date_str:
         return ""
     try:
-        return datetime.strptime(date_str, "%m/%d/%y %I:%M %p").strftime("%Y-%m-%d")
+        return time.strftime("%Y-%m-%d", time.strptime(date_str, "%m/%d/%y %I:%M %p"))
     except ValueError:
         return ""
 
@@ -100,7 +100,7 @@ def get_user_agent() -> str:
     default_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
     try:
         config = configuration() or {}
-    except Exception:
+    except (requests.RequestException, ValueError):
         return default_ua
     return dig(config, "scraping", "scraperUserAgent") or default_ua
 
@@ -338,7 +338,9 @@ def performer_search(
         return [
             {
                 "name": name,
-                "url": f"https://www.clips4sale.com/performers/{dig(p, 'id')}/{quote(name)}",
+                "urls": [
+                    f"https://www.clips4sale.com/performers/{dig(p, 'id')}/{quote(name)}"
+                ],
             }
             for p in performers_data
             if (name := dig(p, "stage_name")) and dig(p, "id")
@@ -403,6 +405,17 @@ def performer_from_url(url: str) -> ScrapedPerformer | None:
     return performer
 
 
+def own_url(fragment: dict, path: str) -> str | None:
+    return next(
+        (
+            url
+            for url in fragment.get("urls") or []
+            if is_own_url(url) and f"clips4sale.com/{path}/" in url
+        ),
+        None,
+    )
+
+
 if __name__ == "__main__":
     op, args = scraper_args()
     result = None
@@ -413,7 +426,7 @@ if __name__ == "__main__":
         case "scene-by-url", {"url": url}:
             result = scene_from_url(url)
         case "scene-by-fragment" | "scene-by-query-fragment", args:
-            if url := args.get("url"):
+            if url := own_url(args, "studio"):
                 result = scene_from_url(url)
             elif title := args.get("title"):
                 results = scene_search(title, detailed=True, limit=1)
@@ -426,7 +439,7 @@ if __name__ == "__main__":
         case "performer-by-url", {"url": url}:
             result = performer_from_url(url)
         case "performer-by-fragment", args:
-            if url := args.get("url"):
+            if url := own_url(args, "performers"):
                 result = performer_from_url(url)
             elif name := args.get("name"):
                 results = performer_search(name, detailed=True, limit=1)

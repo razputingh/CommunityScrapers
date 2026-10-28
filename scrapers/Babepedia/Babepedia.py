@@ -23,39 +23,83 @@ def biography_xpath_test(tree, html_name: str, selector: str) -> str | None:
   elem = tree.xpath(f'//span[contains(text(), "{html_name}")]/following-sibling::span{selector}/text()')
   return elem[0].strip() if elem else None
 
-def sanitize_ethnicity(str) -> Ethnicity:
-    str_upper = str.upper()
-    if str_upper in ["CAUCASIAN","BLACK","ASIAN","INDIAN","LATIN","MIDDLE_EASTERN","MIXED","OTHER"]:
-        return str_upper
-    # catch mixed-race
-    if "MIXED" in str_upper:
-        return str_upper
-    return str # type: ignore
+def sanitize_ethnicity(value: str) -> Ethnicity | None:
+    """Map ethnicity values to Stash enum (title case, not uppercase)."""
+    if not value:
+        return None
+    mapping = {
+        "caucasian": "Caucasian",
+        "white": "Caucasian",
+        "black": "Black",
+        "asian": "Asian",
+        "indian": "Indian",
+        "latin": "Latin",
+        "latina": "Latin",
+        "middle eastern": "Middle Eastern",
+        "middle_eastern": "Middle Eastern",
+        "mixed": "Mixed",
+        "other": "Other",
+    }
+    normalized = value.lower().strip()
+    if normalized in mapping:
+        return mapping[normalized]
+    # Catch partial matches for mixed race
+    if "mixed" in normalized:
+        return "Mixed"
+    return None  # type: ignore
 
-def sanitize_eye_color(str) -> EyeColor | None:
-    str_upper = str.upper()
-    if str_upper in ["Blue","Brown","Green","Grey","Hazel","Red"]:
-        return str_upper
-    return str
+def sanitize_eye_color(value: str) -> EyeColor | None:
+    """Map eye color values to Stash enum (title case)."""
+    if not value:
+        return None
+    mapping = {
+        "blue": "Blue",
+        "brown": "Brown",
+        "green": "Green",
+        "grey": "Grey",
+        "gray": "Grey",  # American spelling
+        "hazel": "Hazel",
+        "red": "Red",
+    }
+    normalized = value.lower().strip()
+    if normalized in mapping:
+        return mapping[normalized]
+    return None  # type: ignore
 
-def sanitize_hair_color(str) -> HairColor:
-    # brown to brunette
-    if str.lower() == "brown":
-        return "Brunette" # type: ignore
-    return str
+def sanitize_hair_color(value: str) -> HairColor | None:
+    """Map hair color values to Stash enum (title case)."""
+    if not value:
+        return None
+    mapping = {
+        "blond": "Blonde",
+        "blonde": "Blonde",
+        "brown": "Brunette",
+        "brunette": "Brunette",
+        "black": "Black",
+        "red": "Red",
+        "auburn": "Auburn",
+        "grey": "Grey",
+        "gray": "Grey",  # American spelling
+        "white": "White",
+        "bald": "Bald",
+        "various": "Various",
+        "other": "Other",
+    }
+    normalized = value.lower().strip()
+    if normalized in mapping:
+        return mapping[normalized]
+    return None  # type: ignore
 
 def sanitize_fake_tits(value: str) -> str | None:
-    # Maps Babepedia's breast type labels to Stash's valid fake_tits values:
-    # "Fake", "Natural", or "Na". We never return "Na" here — if Babepedia
-    # has no data, it's cleaner to leave the field unset than to store "Na".
+    # "Fake"/"Natural" is what Stash itself writes when importing from stash-box
     mapping = {
         "fake/enhanced": "Fake",    # observed on Babepedia
         "real/natural":  "Natural", # observed on Babepedia
-        "fake":          "Fake",    # defensive
-        "enhanced":      "Fake",    # defensive
-        "augmented":     "Fake",    # defensive
-        "natural":       "Natural", # defensive
-        "real":          "Natural", # defensive
+        "fake":          "Fake",
+        "enhanced":      "Fake",
+        "augmented":     "Fake",
+        "natural":       "Natural",
+        "real":          "Natural",
     }
     # Anything unrecognised returns None, which the caller treats as no data.
     return mapping.get(value.lower().strip())
@@ -94,13 +138,10 @@ def performer_from_url(url) -> ScrapedPerformer:
         performer['death_date'] = deathdate.isoformat()
     # get career length
     career = biography_xpath_test(tree, "Years active", "")
-    if (career):
-        years = career.split(" ", 1)[0]
-        start, end = years.split("-")
-        if end == "Present":
-            performer["career_length"] = f"{start}-"
-        else:
-            performer["career_length"] = f"{start} - {end}"
+    if career and (m := re.match(r'(\d{4})(?:\s*[-–]\s*(\d{4}))?', career)):
+        performer["career_start"] = m[1]
+        if m[2]:
+            performer["career_end"] = m[2]
     # get country - extract ISO code from flag icon class (first nationality only)
     nationality_flags = tree.xpath('//span[contains(text(), "Nationality")]/following-sibling::span//span[contains(@class, "fi-")]/@class')
     if nationality_flags:
@@ -109,8 +150,8 @@ def performer_from_url(url) -> ScrapedPerformer:
             performer['country'] = match.group(1).upper()
     # get ethnicity
     ethnicity = biography_xpath_test(tree, "Ethnicity", "/a")
-    if ethnicity:
-        performer['ethnicity'] = sanitize_ethnicity(ethnicity)
+    if ethnicity and (ethnicity_str := sanitize_ethnicity(ethnicity)):
+        performer['ethnicity'] = ethnicity_str
     # get eye color
     eye_color = biography_xpath_test(tree, "Eye color", "/a")
     if eye_color:
@@ -119,8 +160,8 @@ def performer_from_url(url) -> ScrapedPerformer:
             performer['eye_color'] = eye_color_str
     # get hair color
     hair_color = biography_xpath_test(tree, "Hair color", "/a")
-    if hair_color:
-        performer['hair_color'] = sanitize_hair_color(hair_color)
+    if hair_color and (hair_color_str := sanitize_hair_color(hair_color)):
+        performer['hair_color'] = hair_color_str
     # get height
     height = biography_xpath_test(tree, "Height", "")
     if height:
@@ -145,7 +186,7 @@ def performer_from_url(url) -> ScrapedPerformer:
     # get fake/naturals
     breast_type = biography_xpath_test(tree, "Boobs", "/a")
     if breast_type:
-        breast_type_str = "Natural" if "Real" in breast_type else "Fake" if "Fake" in breast_type else None
+        breast_type_str = sanitize_fake_tits(breast_type)
         if breast_type_str:
             performer['fake_tits'] = breast_type_str
     # get tattoos
@@ -210,7 +251,8 @@ def performer_by_name(name) -> list[PerformerSearchResult]:
     scraped = scraper.get("https://www.babepedia.com/ajax-search.php", params={"term": search_name})
     scraped.raise_for_status()
     data = scraped.json()
-    return list(map(map_performer_search,data))
+    # The trailing "Search for <name>..." entry links to the full results page, not a performer
+    return [map_performer_search(p) for p in data if p.get("type") != "search"]
 
 if __name__ == "__main__":
     op, args = scraper_args()

@@ -1,15 +1,13 @@
 import re
-from typing import Any, TypeVar
+from typing import Any
 
-from py_common.types import ScrapedGallery, ScrapedMovie, ScrapedScene
-from py_common.util import dig, replace_all
-
-Scraped = TypeVar("Scraped", ScrapedScene, ScrapedGallery, ScrapedMovie)
+from py_common.types import ScrapedScene
 
 # clip_path is always "{movie_id}_{position}", but the position is only a
 # meaningful scene number when the clip is part of its original multi-scene release
 _clip_position = re.compile(r"_(\d+)$")
 _numbered_title = re.compile(r"\bScene\s*#?\s*\d+\b", re.IGNORECASE)
+_scene_number_suffix = re.compile(r"\s*[,-]\s*Scene\s*#?\s*\d+\s*$", re.IGNORECASE)
 
 
 def _normalized(title: str) -> str:
@@ -42,18 +40,17 @@ def append_scene_number(
     return scene
 
 
-def append_studio_name(
-    obj: Scraped, api_object: dict[str, Any], fallback: str
-) -> Scraped:
-    "Sets the studio to the API's main channel, parented under the fallback"
-    if studio_name := dig(api_object, "mainChannel", "name"):
-        return replace_all(
-            obj,
-            "studio",
-            lambda s: {
-                **s,
-                "name": studio_name,
-                "parent": {"name": fallback},
-            },
-        )
-    return replace_all(obj, "studio", lambda s: {**s, "name": fallback})
+def same_title(a: str, b: str) -> bool:
+    """
+    Title equality that also ignores spacing and the separator before a scene number,
+    since filename-derived titles drop apostrophes: "Kellys - Scene 4" == "Kelly's, Scene 4"
+    """
+    return _normalized(a).replace(" ", "") == _normalized(b).replace(" ", "")
+
+
+def without_scene_number(title: str) -> str:
+    """
+    The search query for a title that append_scene_number may have produced:
+    "Turn It Up, Scene 3" -> "Turn It Up", since the API only knows the movie title
+    """
+    return _scene_number_suffix.sub("", title) or title

@@ -10,16 +10,14 @@ yarn-error.log
 
 # Scraper-generated files
 **/__pycache__/
+*.cache
 *.ini
 *.json
+!/deno.json
 *.log
 
 # Build artifacts
 /_site
-
-# Generator artifacts
-site_generator/site/assets/fuse-index.json
-site_generator/site/assets/scrapers.json
 
 # Automatic dependencies
 /scrapers/automatic_dependencies/

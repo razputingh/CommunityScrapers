@@ -1,0 +1,72 @@
+name: H0930_C0930_H4610-JP
+sceneByURL:
+  - action: scrapeXPath
+    url:
+      - h4610.com/
+      - c0930.com/
+      - h0930.com/
+    scraper: sceneScraper
+sceneByFragment:
+  action: scrapeXPath
+  queryURL: https://www.{filename}
+  # constructs the movie URL from the filename, provided that the filename includes the movie id
+  queryURLReplace:
+    filename:
+      - regex: ([A-Za-z0-9]+)[_\s-]+([A-Za-z0-9]+)f?h?d?[0-9]?[_.\s-]+.+
+        with: $1.com/moviepages/$2/index.html
+  scraper: sceneScraper
+
+xPathScrapers:
+  sceneScraper:
+    common:
+      $poster: //*[@id="moviePlayer"]/img/@src | //*[@id="moviePlayer"]//video/@poster
+      $title: //*[@id="moviePlay"]//span[@class="style1"]
+    scene:
+      Title: $title
+      URLs:
+        selector: $poster
+        postProcess:
+          - replace:
+              - regex: .*//(www|en)\.(h0930|c0930|h4610)\.com/moviepages/([^/]+)/images.*
+                with: https://www.$2.com/moviepages/$3/index.html|https://en.$2.com/moviepages/$3/index.html
+        split: "|"
+      Details:
+        # the English pages have no description, only the performer's name in its place
+        selector: //*[@id="movieInfo"][not(.//dt[normalize-space()="Age"])]//div[@class="row"]/div[1]//p
+      Date:
+        selector: //*[@id="movieInfo"]//dt[contains(., "Release") or contains(., "公開日")]/following-sibling::dd[1]/text()
+        postProcess:
+          - parseDate: 2006-01-02
+      Performers:
+        Name:
+          selector: $title
+          postProcess:
+            - replace:
+                - regex: (.*?)\s(.*?)\s.*
+                  with: $1 $2
+      Code:
+        selector: $poster
+        postProcess:
+          - replace:
+              - regex: .*//(www|en)\.(h0930|c0930|h4610)\.com/moviepages/([^/]+)/images.*
+                with: $3
+      Tags:
+        Name:
+          selector: //*[@id="movieInfo"]//dt[contains(., "プレイ内容") or contains(., "Plays")]/following-sibling::dd/text()
+          postProcess:
+            - replace:
+                - regex: "\t+"
+                  with: ""
+          split: " "
+      Image: $poster
+      Studio:
+        Name:
+          selector: $poster
+          postProcess:
+            - replace:
+                - regex: .*//(www|en)\.(h0930|c0930|h4610)\.com/moviepages/([^/]+)/images.*
+                  with: $2
+            - map:
+                c0930: C0930
+                h0930: H0930
+                h4610: H4610

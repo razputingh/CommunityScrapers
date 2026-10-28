@@ -1,3 +1,4 @@
+# requires: py_common
 name: FantiaJp
 sceneByURL:
   - action: script
@@ -5,14 +6,13 @@ sceneByURL:
       - fantia.jp/posts/
     script:
       - python
-      - ./fantiajp.py
-      - post
+      - FantiaJp.py
+      - scene-by-url
 galleryByURL:
   - action: script
     url:
       - fantia.jp/posts/
     script:
       - python
-      - ./fantiajp.py
-      - post
-# Last Updated May 19, 2024
+      - FantiaJp.py
+      - gallery-by-url

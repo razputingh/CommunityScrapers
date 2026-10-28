@@ -1,20 +1,23 @@
 import json
 import sys
-from requests import head
 from typing import Any
-from py_common import log
-from py_common.util import replace_all, replace_at
+
+from requests import head
+
 from AyloAPI.scrape import (
+    gallery_from_fragment,
     gallery_from_url,
-    scraper_args,
+    movie_from_url,
+    performer_from_fragment,
+    performer_from_url,
+    performer_search,
+    scene_from_fragment,
     scene_from_url,
     scene_search,
-    scene_from_fragment,
-    performer_from_url,
-    performer_from_fragment,
-    performer_search,
-    movie_from_url,
+    scraper_args,
 )
+from py_common import log
+from py_common.util import dig, replace_all, replace_at
 
 studio_map = {
     "Its Gonna Hurt": "It's Gonna Hurt",
@@ -22,8 +25,12 @@ studio_map = {
 }
 
 
+def rename_studio(name: str) -> str:
+    return studio_map.get(name, name)
+
+
 def redirect(url: str) -> str:
-    if not url:
+    if not url or "/h1/video" not in url:
         return url
     if (res := head(url)) and (redirect := res.headers.get("location", url)):
         return redirect if not redirect.endswith("404") else url
@@ -34,22 +41,20 @@ def gaywire(obj: Any, _) -> Any:
     if obj is None:
         return None
 
-    # API returns Gay Wire substudios as bangbros.com
-    fixed = replace_all(
-        obj,
-        "url",
-        lambda x: x.replace("www.bangbros.com", "gaywire.com"),
+    # API returns Gay Wire substudios as bangbros.com, but Guy Selector has its own site
+    domain = (
+        "www.guyselector.com"
+        if dig(obj, "studio", "name") == "Guy Selector"
+        else "gaywire.com"
     )
     fixed = replace_all(
-        fixed,
+        obj,
         "urls",
-        lambda x: x.replace("www.bangbros.com", "gaywire.com"),
+        lambda x: x.replace("www.bangbros.com", domain),
     )
 
     # Rename certain studios according to the map
-    fixed = replace_at(
-        fixed, "studio", "name", replacement=lambda x: studio_map.get(x, x)
-    )
+    fixed = replace_at(fixed, "studio", "name", replacement=rename_studio)
 
     fixed = replace_at(
         fixed, "studio", "parent", "name", replacement=lambda _: "Gay Wire"
@@ -64,16 +69,21 @@ if __name__ == "__main__":
     result = None
 
     match op, args:
-        case "gallery-by-url" | "gallery-by-fragment", {"url": url} if url:
+        case "gallery-by-url", {"url": url} if url:
             url = redirect(url)
             result = gallery_from_url(url, postprocess=gaywire)
+        case "gallery-by-fragment", args:
+            args = replace_all(args, "urls", redirect)
+            result = gallery_from_fragment(
+                args, search_domains=domains, postprocess=gaywire
+            )
         case "scene-by-url", {"url": url} if url:
             url = redirect(url)
             result = scene_from_url(url, postprocess=gaywire)
         case "scene-by-name", {"name": name} if name:
             result = scene_search(name, search_domains=domains, postprocess=gaywire)
         case "scene-by-fragment" | "scene-by-query-fragment", args:
-            args = replace_all(args, "url", redirect)
+            args = replace_all(args, "urls", redirect)
             result = scene_from_fragment(
                 args, search_domains=domains, postprocess=gaywire
             )
@@ -81,7 +91,9 @@ if __name__ == "__main__":
             url = redirect(url)
             result = performer_from_url(url, postprocess=gaywire)
         case "performer-by-fragment", args:
-            result = performer_from_fragment(args)
+            result = performer_from_fragment(
+                args, search_domains=domains, postprocess=gaywire
+            )
         case "performer-by-name", {"name": name} if name:
             result = performer_search(name, search_domains=domains, postprocess=gaywire)
         case "movie-by-url", {"url": url} if url:

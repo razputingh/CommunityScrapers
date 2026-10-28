@@ -1,0 +1,76 @@
+name: Caribbeancom
+sceneByURL:
+  - action: scrapeXPath
+    url:
+      - en.caribbeancom.com/eng/moviepages
+      - en.caribbeancompr.com/eng/moviepages
+    scraper: sceneScraper
+sceneByFragment:
+  action: scrapeXPath
+  queryURL: https://en.caribbeancom{filename}
+  # constructs the movie URL from the filename, provided that the filename includes the movie id
+  queryURLReplace:
+    filename:
+      - regex: .*(\d{6}-\d{3}).* # carribeancom uses ids with form like 062212-055
+        with: .com/eng/moviepages/$1/index.html
+      - regex: .*(\d{6}_\d{3}).* # caribbeancompr uses 062212_055
+        with: pr.com/eng/moviepages/$1/index.html
+      - regex: .+[^index.html]$ # if no valid ID found in filename
+        with: .com/404.html # clear filename
+  scraper: sceneScraper
+
+xPathScrapers:
+  sceneScraper:
+    common:
+      $movieinfo: //div[contains(@class, "movie-info")]
+    scene:
+      Title: //div[contains(@class, "heading")]/h1
+      Details: $movieinfo//p
+      URLs:
+        selector: &movieLink //a[contains(@href, "/member/movies/")]/@href
+        concat: "|"
+        postProcess:
+          - replace:
+              - regex: .*?//[^/]*\.(caribbeancompr|caribbeancom)\.com/member/movies/([^/]+)/.*
+                with: https://www.${1}.com/moviepages/${2}/index.html|https://en.${1}.com/eng/moviepages/${2}/index.html
+        split: "|"
+      Date:
+        selector: *movieLink
+        postProcess:
+          - replace:
+              - regex: .*/member/movies/(\d{6})[-_]\d+/.*
+                with: $1
+          - parseDate: "010206"
+      Code:
+        selector: *movieLink
+        postProcess:
+          - replace:
+              - regex: .*/member/movies/([^/]+)/.*
+                with: $1
+      Image:
+        selector: *movieLink
+        postProcess:
+          - replace:
+              - regex: .*?//[^/]*\.(caribbeancompr|caribbeancom)\.com/member/movies/([^/]+)/.*
+                with: https://www.${1}.com/moviepages/${2}/images/l_l.jpg
+      Performers:
+        Name:
+          selector: //ul/li/span[contains(., "Starring")]/..//a
+          concat: ", "
+          postProcess:
+            - replace:
+                - regex: '\s*&\s*'
+                  with: ", "
+          split: ", "
+      Tags:
+        Name: //ul/li/span[contains(., "Tags")]/../span/a[contains(@class, "spec")]
+      Studio:
+        Name:
+          selector: //ul[@class="footer-copyright"]/li[contains(., "©")]
+          postProcess:
+            - replace:
+                - regex: .*\s([\w]+)\.com.*
+                  with: $1
+            - map:
+                caribbeancompr: Caribbeancom Premium
+                caribbeancom: Caribbeancom

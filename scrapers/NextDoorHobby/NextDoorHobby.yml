@@ -1,5 +1,5 @@
-name: NextDoorHobby
 # requires: py_common, AyloAPI
+name: NextDoorHobby
 galleryByURL:
   - action: script
     url:
@@ -49,7 +49,7 @@ performerByName:
 performerByURL:
   - action: script
     url:
-      - NextDoorHobby.com/model/
+      - nextdoorhobby.com/model/
     script:
       - python
       - NextDoorHobby.py
@@ -60,14 +60,3 @@ performerByFragment:
     - python
     - NextDoorHobby.py
     - performer-by-fragment
-groupByURL:
-  - action: script
-    url:
-      - NextDoorHobby.com/movie
-      # Since scenes link to the movie we can scrape movies from scenes
-      - nextdoorhobby.com/scene
-    script:
-      - python
-      - NextDoorHobby.py
-      - movie-by-url
-# Last Updated August 06, 2024

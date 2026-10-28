@@ -31,7 +31,7 @@ xPathScrapers:
         selector: $title
         postProcess:
           - replace:
-              - regex: \s*([A-Z]{2,3}\d+\s*)?-\s*((Piss|Anal)Vids|BustyPornWorld)$
+              - regex: \s*([A-Z]{2,4}\d+\s*)?-\s*((Piss|Anal)Vids|BustyPornWorld)$
                 with: ""
       Date: &date
         selector: //i[contains(@class, "bi-calendar3")]
@@ -44,14 +44,14 @@ xPathScrapers:
         selector: $title
         postProcess:
           - replace:
-              - regex: .+?([A-Z]{2,3}\d+)\s*-\s*((Piss|Anal)Vids|BustyPornWorld)$$|(.*)
+              - regex: .+?([A-Z]{2,4}\d+)\s*-\s*((Piss|Anal)Vids|BustyPornWorld)$$|(.*)
                 with: $1
       Performers: &performers
         Name: //h1[contains(@class, "watch__title")]//a
         URLs: //h1[contains(@class, "watch__title")]//a/@href
       Studio:
         Name: //div[contains(@class, "genres-list")]//a[contains(@href, "/studios/")]
-        URL: //div[contains(@class, "genres-list")]//a[contains(@href, "/studios/")]/@href
+        URLs: //div[contains(@class, "genres-list")]//a[contains(@href, "/studios/")]/@href
       Tags: &tags
         Name: //div[contains(@class, "genres-list")]//a[contains(@href, "/genre/")]
       Image: &image //video/@data-poster
@@ -74,5 +74,12 @@ xPathScrapers:
   performerScraper:
     performer:
       Name: //h1
+      Gender:
+        selector: //a[contains(@href, "/models/sex/")]/@href
+        postProcess:
+          - replace:
+              - regex: .*/models/sex/(\w+)/.*
+                with: $1
       Country: //a[contains(@href, "nationality")]
+      URLs: //link[@rel="canonical"]/@href
       Image: //div[contains(@class, 'model__left')]//img/@src

@@ -11,6 +11,7 @@ sceneByURL:
       - bruthasinc.com/
       - concoxxxion.com/
       - elegantangel.com/
+      - evasiveangles.com/
       - forbiddenfruitsfilms.com/
       - helixstudios.com/
       - hornyhousehold.com/
@@ -30,6 +31,7 @@ sceneByURL:
       - stephousexxx.com/
       - store.evilangel.com/
       - store.evilangelvideo.com/
+      - store.freeones.com/
       - store18.com/
       - streaming.iafd.com/
       - taboolu.com/
@@ -55,6 +57,7 @@ groupByURL:
       # - shemalestrokers.com/ # Scenes published as movies?
       - store.evilangel.com/
       - store.evilangelvideo.com/
+      - store.freeones.com/
       - store18.com/
       - streaming.iafd.com/
       - thirdworldxxx.com/
@@ -102,12 +105,19 @@ xPathScrapers:
                 # 'Jane Doe Clips' => 'Jane Doe'
                 - regex: \sClips$
                   with:
-      Image: //link[@rel="image_src"]/@href
+      Image:
+        selector: >-
+          //style[contains(.,"empire-player-video-container") and contains(.,"-custom-default.")] |
+          //link[@rel="image_src"][not(//style[contains(.,"empire-player-video-container") and contains(.,"-custom-default.")])]/@href
+        postProcess:
+          - replace:
+              - regex: '(?s).*?\.empire-player-video-container\s*\{[^}]*background(?:-image)?:\s*url\([''"]?([^''"\)]+)[''"]?\).*'
+                with: $1
       URLs: &urlSel //meta[@name="og:url"]/@content
       Groups:
         Name: //h1[@class="description"]/following-sibling::p/a
-      Director:
-        selector: //div[@class="director"]//text()[not(parent::span)]
+      Director: &directorSel
+        selector: //div[@class="director"]/node()[self::a or self::text()]
         concat: " "
         postProcess:
           - replace:
@@ -131,7 +141,7 @@ xPathScrapers:
       Synopsis:
         selector: //div[@class="synopsis"]//text()
         concat: "\n\n"
-      Director: //div[@class="director"]/a
+      Director: *directorSel
       Duration:
         selector: //div[@class="release-date"][2]/text()
         postProcess:
